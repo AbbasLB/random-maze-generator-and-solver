@@ -1,10 +1,11 @@
-// APP1-Maze-Solution.cpp : This file contains the 'main' function. Program execution begins and ends there.
+﻿// APP1-Maze-Solution.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
 #include <iostream>
 #include <vector>
 #include <bitset>
 #include <set>
+#include <map>
 using namespace std;
 
 #define UNDERLINE "\033[4m"
@@ -109,12 +110,12 @@ bool canMove(Matrix& m,Direction direction, int i, int j)
 }
 
 
-bool getShortestPathHelper(Matrix& m, int i1, int j1, int i2, int j2, Direction from,set<pair<int,int>> &res)
+bool getShortestPathHelper(Matrix& m, int i1, int j1, int i2, int j2, Direction from,map<pair<int,int>,Direction> &res)
 {
 	if (i1 == i2 && j1 == j2)
 	{
-		//cout << i1 << ' ' << j1 << endl;
-		res.insert(make_pair(i1, j1));
+		//cout << i1 << ' ' << j1 << endl;'
+		res[make_pair(i1, j1)]= from;
 		return true;
 	}
 	bool found = false;
@@ -127,7 +128,7 @@ bool getShortestPathHelper(Matrix& m, int i1, int j1, int i2, int j2, Direction 
 	if (!found && from != Left && canMove(m, Left, i1, j1) && getShortestPathHelper(m, i1, j1 - 1, i2, j2, Right, res))
 		found = true;
 	if (found) {
-		res.insert(make_pair(i1, j1));
+		res[make_pair(i1, j1)]=from;
 		//cout << i1 << ' ' << j1 << endl;
 	}
 		
@@ -135,29 +136,38 @@ bool getShortestPathHelper(Matrix& m, int i1, int j1, int i2, int j2, Direction 
 }
 
 
-set<pair<int, int>> getShortestPath(Matrix& matrix)
+map<pair<int, int>,Direction> getShortestPath(Matrix& matrix)
 {
-	set<pair<int, int>> res;
+	map<pair<int, int>,Direction> res;
 	if (matrix.size() == 0)
 		return res;
 	getShortestPathHelper(matrix,matrix.size() - 1, matrix[0].size() - 1,1,1,None, res);
 	return res;
 }
 
-void printMatrix(Matrix m, set<pair<int, int>>& res)
+void printMatrix(Matrix m, map<pair<int, int>,Direction>& path)
 {
+	map<Direction,string> directionChar;
+	directionChar[Left] ="<";
+	directionChar[Right] =">";
+	directionChar[Up] = "^";
+	directionChar[Down] ="v";
+	directionChar[None] ="o";
+
 	for (int i = 0; i < m.size(); i++) {
 		for (int j = 0; j < m[i].size(); j++)
 		{
-			bool isPartOfTheShortestPath = res.count(make_pair(i, j));
+			auto pos = make_pair(i, j);
+			bool isPartOfTheShortestPath = path.count(pos);
+			
 
-			if (m[i][j].test(HasBottomBorder))
+			if (isPartOfTheShortestPath)
 			{
-				if (isPartOfTheShortestPath)
-					cout << UNDERLINE << "o" << CLOSEUNDERLINE;
-				else cout << "_";
+				if (m[i][j].test(HasBottomBorder))
+					cout << UNDERLINE << directionChar[path[pos]] << CLOSEUNDERLINE;
+				else cout << directionChar[path[pos]];
 			}
-			else cout << (isPartOfTheShortestPath ? "o" : " ");
+			else cout << (m[i][j].test(HasBottomBorder) ? "_" : " ");
 
 			cout << (m[i][j].test(HasRightBorder) ? "|" : " ");
 		}
@@ -172,10 +182,10 @@ int main()
 	//for(int i=1;i<10;i++)
 		//printMatrix(generateMatrix(i,i));
 
-	auto matrix = generateMatrix(9, 40);
+	auto matrix = generateMatrix(20, 20);
 
-	set<pair<int, int>> empty;
-	printMatrix(matrix, empty);
+	map<pair<int, int>,Direction> emptyPath;
+	printMatrix(matrix, emptyPath);
 
 	auto s = getShortestPath(matrix);
 	printMatrix(matrix, s);
