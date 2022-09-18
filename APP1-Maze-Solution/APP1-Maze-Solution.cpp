@@ -3,17 +3,18 @@
 
 #include <iostream>
 #include <vector>
+#include <bitset>
 #include <set>
 using namespace std;
 
 #define UNDERLINE "\033[4m"
 #define CLOSEUNDERLINE "\033[0m"
-#define HasRightBorder 1
-#define HasBottomBorder 2
+#define HasRightBorder 0
+#define HasBottomBorder 1
 
 
 
-typedef vector<vector<short>> Matrix;
+typedef vector<vector<bitset<2>>> Matrix;
 enum Direction
 {
 	None,
@@ -29,10 +30,10 @@ void GenerateRandomMatrixTest(Matrix& matrix)
 	{
 		int a = rand() % (matrix.size() - 1) + 1;
 		int b = rand() % (matrix[0].size() - 1) + 1;
-		matrix[a][b] |= HasRightBorder;
+		matrix[a][b].set(HasRightBorder);
 		a = rand() % (matrix.size() - 1) + 1;
 		b = rand() % (matrix[0].size() - 1) + 1;
-		matrix[a][b] |= HasBottomBorder;
+		matrix[a][b].set(HasBottomBorder);
 	}
 }
 
@@ -47,7 +48,7 @@ void generateMatrixRec(Matrix& m, int i1, int j1, int i2, int j2)
 		int doorPos = j1 + rand() % (j2 - j1 + 1);
 		for (int j = j1; j <= j2; j++)
 			if (j != doorPos)
-			m[iSplit][j] |= HasBottomBorder;
+			m[iSplit][j].set(HasBottomBorder);
 		generateMatrixRec(m, i1, j1, iSplit, j2);
 		generateMatrixRec(m, iSplit+1, j1, i2, j2);
 	}
@@ -57,7 +58,7 @@ void generateMatrixRec(Matrix& m, int i1, int j1, int i2, int j2)
 		int doorPos = i1 + rand() % (i2 - i1 + 1);
 		for (int i = i1; i <= i2; i++)
 			if(i!=doorPos)
-				m[i][jSplit] |= HasRightBorder;
+				m[i][jSplit].set(HasRightBorder);
 		generateMatrixRec(m, i1, j1, i2, jSplit);
 		generateMatrixRec(m, i1, jSplit + 1, i2, j2);
 	}
@@ -65,14 +66,14 @@ void generateMatrixRec(Matrix& m, int i1, int j1, int i2, int j2)
 //fix base cases
 Matrix generateMatrix(int rows, int cols)
 {
-	vector<vector<short>> matrix(rows + 1, vector<short>(cols + 1, 0));
+	vector<vector<bitset<2>>> matrix(rows + 1, vector<bitset<2>>(cols + 1, 0));
 	for (int i = 1; i <= cols; i++) {
-		matrix[0][i] |= HasBottomBorder;
-		matrix[rows][i] |= HasBottomBorder;
+		matrix[0][i].set(HasBottomBorder);
+		matrix[rows][i].set(HasBottomBorder);
 	}
 	for (int i = 1; i <= rows; i++) {
-		matrix[i][0] |= HasRightBorder;
-		matrix[i][cols] |= HasRightBorder;
+		matrix[i][0].set(HasRightBorder);
+		matrix[i][cols].set(HasRightBorder);
 	}
 	//GenerateRandomMatrixTest(matrix);
 	generateMatrixRec(matrix, 1,1, rows, cols);
@@ -92,13 +93,13 @@ bool canMove(Matrix& m,Direction direction, int i, int j)
 		return canMove(m, Right,i, j - 1);
 		break;
 	case Right:
-		return cellInMatrix(m, i, j) && cellInMatrix(m, i, j + 1) && !(m[i][j] & HasRightBorder);
+		return cellInMatrix(m, i, j) && cellInMatrix(m, i, j + 1) && !m[i][j].test(HasRightBorder);
 		break;
 	case Up:
 		return canMove(m,Down, i - 1, j);
 		break;
 	case Down:
-		return cellInMatrix(m, i, j) && cellInMatrix(m, i + 1, j) && !(m[i][j] & HasBottomBorder);
+		return cellInMatrix(m, i, j) && cellInMatrix(m, i + 1, j) && !m[i][j].test(HasBottomBorder);
 		break;
 	default:
 		return cellInMatrix(m, i, j);
@@ -150,7 +151,7 @@ void printMatrix(Matrix m, set<pair<int, int>>& res)
 		{
 			bool isPartOfTheShortestPath = res.count(make_pair(i, j));
 
-			if ((m[i][j] & HasBottomBorder))
+			if (m[i][j].test(HasBottomBorder))
 			{
 				if (isPartOfTheShortestPath)
 					cout << UNDERLINE << "o" << CLOSEUNDERLINE;
@@ -158,7 +159,7 @@ void printMatrix(Matrix m, set<pair<int, int>>& res)
 			}
 			else cout << (isPartOfTheShortestPath ? "o" : " ");
 
-			cout << ((m[i][j] & HasRightBorder) ? "|" : " ");
+			cout << (m[i][j].test(HasRightBorder) ? "|" : " ");
 		}
 		cout << endl;
 	}
@@ -179,16 +180,4 @@ int main()
 	auto s = getShortestPath(matrix);
 	printMatrix(matrix, s);
 	
-
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
