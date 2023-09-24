@@ -38,22 +38,35 @@ void GenerateRandomMatrixTest(Matrix& matrix)
 	}
 }
 
+//to generate matrix : call generateMatrixRec(matrix, 1,1, rows, cols);
 void generateMatrixRec(Matrix& m, int i1, int j1, int i2, int j2)
 {
-	int iDiff = i2 - i1;
-	int jDiff = j2 - j1;
-	if (iDiff <= 0 && jDiff <= 0) return;
-	if (iDiff > jDiff) {
+	int matrixHeight = i2 - i1;
+	int matrixWidth = j2 - j1;
+
+	//base case: we have nothing to do with empty matrix
+	if (matrixHeight <= 0 && matrixWidth <= 0) return;
+
+	//if height of matrix> width of matrix
+	//we split the matrix horizontally with a big wall at a random position
+	//then we open a door in that wall at a random
+	if (matrixHeight > matrixWidth) {
 		//int iSplit = (i1+i2) / 2;
+
+		//The wall random position
 		int iSplit = i1 + rand() % (i2 - i1);
+		//The door random position
 		int doorPos = j1 + rand() % (j2 - j1 + 1);
+		//build the horizontal wall with an opened door
 		for (int j = j1; j <= j2; j++)
 			if (j != doorPos)
-			m[iSplit][j].set(HasBottomBorder);
+			m[iSplit][j].set(HasBottomBorder);//setting bottom border for all positions except the door
+		//then we call recursively on the 2 parts of the matrix
 		generateMatrixRec(m, i1, j1, iSplit, j2);
 		generateMatrixRec(m, iSplit+1, j1, i2, j2);
 	}
 	else {
+		//splitting the matrix vertically (same as horizontally)
 		//int jSplit = (j1+j2) / 2;
 		int jSplit = j1 + rand() % (j2 - j1);
 		int doorPos = i1 + rand() % (i2 - i1 + 1);
@@ -169,10 +182,20 @@ void printMatrix(Matrix m, map<pair<int, int>,Direction>& path)
 			}
 			else cout << (m[i][j].test(HasBottomBorder) ? "_" : " ");
 
+
 			cout << (m[i][j].test(HasRightBorder) ? "|" : " ");
 		}
 		cout << endl;
 	}
+}
+void printBinMatrix(Matrix& m)
+{
+	for (int i = 0; i < m.size(); i++) {
+		for (int j = 0; j < m[i].size(); j++)
+			cout << m[i][j].test(0) << m[i][j].test(1) << " ";
+		cout << "\n";
+	}
+
 }
 
 int main()
@@ -182,11 +205,14 @@ int main()
 	//for(int i=1;i<10;i++)
 		//printMatrix(generateMatrix(i,i));
 
-	auto matrix = generateMatrix(20, 20);
+	auto matrix = generateMatrix(10, 40);
 
 	map<pair<int, int>,Direction> emptyPath;
+	cout <<endl<< "Gernerated matrix:" << endl;
 	printMatrix(matrix, emptyPath);
+	//printBinMatrix(matrix);
 
+	cout << endl << "Path:" << endl;
 	auto s = getShortestPath(matrix);
 	printMatrix(matrix, s);
 	
